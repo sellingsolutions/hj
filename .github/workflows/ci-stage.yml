@@ -1,0 +1,72 @@
+name: DEPLOY STAGE
+on:
+  push:
+    branches:
+      - stage
+
+jobs:
+  deployment:
+    name: DEPLOY
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.101
+
+      - name: Bump Version
+        run: |
+          VERSION=$(cat HubspotConnector.Api/HubspotConnector.Api.csproj | grep '<PackageVersion>' | sed 's/^.*<PackageVersion>\([0-9.]*\).*/\1/')
+          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{if(length($NF+1)>length($NF))$(NF-1)++; $NF=sprintf("%0*d", length($NF), ($NF+1)%(10^length($NF))); print}')
+
+          echo "RELEASE_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+          sed "s/>${VERSION}</>${NEW_VERSION}</g" HubspotConnector.Api/HubspotConnector.Api.csproj > temp1
+
+          cat temp1 > HubspotConnector.Api/HubspotConnector.Api.csproj
+
+          rm temp*
+
+          git config --global user.email "alexander@icontrolapp.se"
+          git config --global user.name "Alexander Selling"
+          git add */*.csproj
+          git commit -m "Incremented the version to $NEW_VERSION"
+          git push
+
+      - run: dotnet restore HubspotConnector.sln --source https://api.nuget.org/v3/index.json --source http://nuget.stage.ispect.se/v3/index.json
+      - run: dotnet publish --configuration Release --no-restore
+
+      - name: webfactory/ssh-agent
+        uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_ISPECT_APP_SERVER_STAGE }}
+
+      - run: echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > /home/runner/.ssh/config
+      - run: echo -e "${{ secrets.SSH_PRIVATE_KEY_ISPECT_APP_SERVER_STAGE }}" > /home/runner/.ssh/id_rsa
+      - run: echo -e "${{ secrets.SSH_PUBLIC_KEY_ISPECT_APP_SERVER_STAGE }}" > /home/runner/.ssh/id_rsa.pub
+      - run: chmod 600 /home/runner/.ssh/*
+
+      - name: Remove Previous Nupkegs
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER_STAGE }} 'rm /var/www/hubspot-connector-stage/nuget-packages/*.nupkg'
+
+      - name: Deploy Application Binary
+        run: rsync -avzh --delete -e ssh /home/runner/work/hubspot-connector/hubspot-connector/HubspotConnector.Api/bin/Release/net5*/publish zno@${{ secrets.ISPECT_APP_SERVER_STAGE }}:/var/www/hubspot-connector-stage/
+
+      - name: Deploy Nupkeg
+        run: rsync -avzh -e ssh /home/runner/work/hubspot-connector/hubspot-connector/*/bin/Release/*.nupkg zno@${{ secrets.ISPECT_APP_SERVER_STAGE }}:/var/www/hubspot-connector-stage/nuget-packages/
+
+      - name: Restart STAGE service
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER_STAGE }} 'sudo systemctl restart hubspot-connector-stage.service'
+
+      - name: Publish Nupkeg
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER_STAGE }} '~/conf/nuget-server/publish-stage.sh /var/www/hubspot-connector-stage/nuget-packages'
+
+      - name: STAGE Slack Notification
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_CHANNEL: release-stage
+          SLACK_COLOR: "#3278BD"
+          SLACK_ICON: https://avatars.slack-edge.com/2020-01-25/909364132834_e2d6069d1789226dfa29_48.png
+          SLACK_USERNAME: HUBSPOT-CONNECTOR-STAGE
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
