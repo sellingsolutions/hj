@@ -52,10 +52,11 @@ namespace HubspotConnector.Application.DataAccess.Handlers
             {
                 if (notification is IsWarrantyReminderNotification warrantyReminder)
                 {
-                    var name = warrantyReminder is IsGarantibesiktningReminderQueueItem ? "GB" : "SÄB";
+                    var isGb = warrantyReminder is IsGarantibesiktningReminderQueueItem;
+                    var name = isGb ? "GB" : "SÄB";
                     
                     var inspection = await _db.Get<Inspection>(warrantyReminder.InspectionId);
-                    var warrantyExpiresAt = inspection.EndsAt.AddYears(2);
+                    var warrantyExpiresAt = isGb ? inspection.EndsAt.AddYears(2) : inspection.EndsAt.AddYears(5);
                     var followUpDeadline = warrantyExpiresAt.AddMonths(-3);
                     if (followUpDeadline < DateTime.UtcNow)
                         followUpDeadline = DateTime.UtcNow;
