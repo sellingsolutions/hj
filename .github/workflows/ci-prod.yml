@@ -42,6 +42,9 @@ jobs:
       - run: echo -e "${{ secrets.SSH_PUBLIC_KEY_ISPECT_APP_SERVER }}" > /home/runner/.ssh/id_rsa.pub
       - run: chmod 600 /home/runner/.ssh/*
 
+      - name: Add placeholder nupkeg
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER }} 'touch /var/www/hubspot-connector/nuget-packages/placeholder-$RELEASE_VERSION.nupkg'
+
       - name: Remove Previous Nupkegs
         run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER }} 'rm /var/www/hubspot-connector/nuget-packages/*.nupkg'
 
