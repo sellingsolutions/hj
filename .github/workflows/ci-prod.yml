@@ -1,0 +1,67 @@
+name: PRODUCTION
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deployment:
+    name: DEPLOY
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.101
+
+      - name: Get Release Version
+        run: |
+          VERSION=$(cat HubspotConnector.Api/HubspotConnector.Api.csproj | grep '<PackageVersion>' | sed 's/^.*<PackageVersion>\([0-9.]*\).*/\1/')
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Relase Tag
+        run: |
+          git tag "v$RELEASE_VERSION"
+          git push --tags
+
+      - run: dotnet restore HubspotConnector.sln --source https://api.nuget.org/v3/index.json --source http://nuget.ispect.se/v3/index.json
+      - run: dotnet publish --configuration Release --no-restore
+
+      - run: echo $RELEASE_VERSION
+
+      - run: dotnet pack -p:PackageVersion=$RELEASE_VERSION --configuration Release --no-build HubspotConnector.Api
+
+      - name: webfactory/ssh-agent
+        uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_ISPECT_APP_SERVER }}
+
+      - run: echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > /home/runner/.ssh/config
+      - run: echo -e "${{ secrets.SSH_PRIVATE_KEY_ISPECT_APP_SERVER }}" > /home/runner/.ssh/id_rsa
+      - run: echo -e "${{ secrets.SSH_PUBLIC_KEY_ISPECT_APP_SERVER }}" > /home/runner/.ssh/id_rsa.pub
+      - run: chmod 600 /home/runner/.ssh/*
+
+      - name: Remove Previous Nupkegs
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER }} 'rm /var/www/hubspot-connector/nuget-packages/*.nupkg'
+
+      - name: Deploy Application Binary
+        run: rsync -avzh --delete -e ssh /home/runner/work/hubspot-connector/hubspot-connector/HubspotConnector.Api/bin/Release/net5*/publish zno@${{ secrets.ISPECT_APP_SERVER }}:/var/www/hubspot-connector/
+
+      - name: Deploy Nuget Package
+        run: rsync -avzh -e ssh /home/runner/work/hubspot-connector/hubspot-connector/*/bin/Release/*.nupkg zno@${{ secrets.ISPECT_APP_SERVER }}:/var/www/hubspot-connector/nuget-packages/
+
+      - name: Publish Nuget Package
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER }} '~/conf/nuget-server/publish.sh /var/www/hubspot-connector/nuget-packages'
+
+      - name: Restart Service
+        run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER }} 'sudo systemctl restart hubspot-connector.service'
+
+      - name: PRODUCTION Slack Notification
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_CHANNEL: release
+          SLACK_COLOR: "#3278BD"
+          SLACK_ICON: https://avatars.slack-edge.com/2020-01-25/909364132834_e2d6069d1789226dfa29_48.png
+          SLACK_USERNAME: HUBSPOT-CONNECTOR-PRODUCTION
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
