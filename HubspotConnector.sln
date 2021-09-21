@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubspotConnector.Api", "HubspotConnector.Api\HubspotConnector.Api.csproj", "{D3474E45-685D-4DCF-9CFB-35EFFCD599BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubspotConnector.Integration", "HubspotConnector.Integration\HubspotConnector.Integration.csproj", "{C73A2942-F9E5-49ED-8EA1-27F56B6275E5}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubspotConnector.Tests", "HubspotConnector.Tests\HubspotConnector.Tests.csproj", "{AD1BCA1E-D9F5-4EAA-8527-D5A90E6FDACC}"
 EndProject
 Global
@@ -16,10 +14,6 @@ Global
 		{D3474E45-685D-4DCF-9CFB-35EFFCD599BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3474E45-685D-4DCF-9CFB-35EFFCD599BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3474E45-685D-4DCF-9CFB-35EFFCD599BA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C73A2942-F9E5-49ED-8EA1-27F56B6275E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C73A2942-F9E5-49ED-8EA1-27F56B6275E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C73A2942-F9E5-49ED-8EA1-27F56B6275E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C73A2942-F9E5-49ED-8EA1-27F56B6275E5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AD1BCA1E-D9F5-4EAA-8527-D5A90E6FDACC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AD1BCA1E-D9F5-4EAA-8527-D5A90E6FDACC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD1BCA1E-D9F5-4EAA-8527-D5A90E6FDACC}.Release|Any CPU.ActiveCfg = Release|Any CPU
