@@ -8,7 +8,6 @@ using iSpectAPI.Core.Application.Extensions.Reflection;
 using iSpectAPI.Core.Database.ActorModel.Actors;
 using iSpectAPI.Core.Database.HubspotConnector.Associations;
 using iSpectAPI.Core.Database.HubspotConnector.Deals;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Skarp.HubSpotClient.Deal;
 using Skarp.HubSpotClient.Deal.Dto;
@@ -19,9 +18,10 @@ namespace HubspotConnector.Application.DataAccess.Services
     {
         private readonly ICBSClient _db;
         private readonly HsAppSettings _appSettings;
-        private readonly HubSpotDealClient _hubSpotDealClient;
         private readonly IHubspotOwnerRepository _hubspotOwnerRepository;
         private readonly IHubspotContactRepository _hubspotContactRepository;
+
+        private HubSpotDealClient _hubSpotDealClient { get; set; }
 
         public HubspotDealService(
             IOptions<HsAppSettings> appSettings,
@@ -31,9 +31,10 @@ namespace HubspotConnector.Application.DataAccess.Services
         {
             _db = db;
             _appSettings = appSettings.Value;
-            _hubSpotDealClient = new HubSpotDealClient(_appSettings.ApiKey);
             _hubspotOwnerRepository = hubspotOwnerRepository;
             _hubspotContactRepository = hubspotContactRepository;
+            
+            _hubSpotDealClient = new HubSpotDealClient(_appSettings.ApiKey);
         }
 
         public async Task<HsDeal> CreateDeal(HubspotDealRequest request)

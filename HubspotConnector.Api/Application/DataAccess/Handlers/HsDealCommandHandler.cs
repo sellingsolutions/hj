@@ -11,7 +11,6 @@ using iSpectAPI.Core.Database.ActorModel.Actors;
 using iSpectAPI.Core.Database.ActorModel.Actors.Groups;
 using iSpectAPI.Core.Database.HubspotConnector.Commands;
 using iSpectAPI.Core.Database.Legacy;
-using iSpectAPI.Core.Database.QueueItems;
 using iSpectAPI.Core.Database.QueueItems.Notifications;
 using iSpectAPI.Core.Database.QueueItems.Notifications.WarrantyReminders;
 using Microsoft.Extensions.Options;
