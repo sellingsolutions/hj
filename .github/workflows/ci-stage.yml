@@ -53,6 +53,9 @@ jobs:
       - name: Deploy Application Binary
         run: rsync -avzh --delete -e ssh /home/runner/work/hubspot-connector/hubspot-connector/HubspotConnector.Api/bin/Release/net5*/publish zno@${{ secrets.ISPECT_APP_SERVER_STAGE }}:/var/www/hubspot-connector-stage/
 
+      - name: List Nupkegs
+        run: ls -halt /home/runner/work/hubspot-connector/hubspot-connector/*/bin/Release
+
       - name: Deploy Nupkeg
         run: rsync -avzh -e ssh /home/runner/work/hubspot-connector/hubspot-connector/*/bin/Release/*.nupkg zno@${{ secrets.ISPECT_APP_SERVER_STAGE }}:/var/www/hubspot-connector-stage/nuget-packages/
 
