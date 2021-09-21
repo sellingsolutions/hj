@@ -37,7 +37,7 @@ namespace HubspotConnector.Application.DataAccess.Queues
                 TimeSpan.FromSeconds(5), 
                 TimeSpan.FromMinutes(1), 
                 CancellationToken.None,
-                IsApplicationEnvironment.Any)
+                IsApplicationEnvironment.Production)
         {
             _cbsClient = cbsClient;
             _logger = logger;
