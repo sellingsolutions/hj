@@ -8,6 +8,7 @@ using iSpectAPI.Core.Application.Extensions.Reflection;
 using iSpectAPI.Core.Database.ActorModel.Actors;
 using iSpectAPI.Core.Database.HubspotConnector.Associations;
 using iSpectAPI.Core.Database.HubspotConnector.Deals;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Skarp.HubSpotClient.Deal;
 using Skarp.HubSpotClient.Deal.Dto;
@@ -18,6 +19,7 @@ namespace HubspotConnector.Application.DataAccess.Services
     {
         private readonly ICBSClient _db;
         private readonly HsAppSettings _appSettings;
+        private readonly ILogger<IHubspotDealService> _logger;
         private readonly IHubspotOwnerRepository _hubspotOwnerRepository;
         private readonly IHubspotContactRepository _hubspotContactRepository;
 
@@ -26,10 +28,12 @@ namespace HubspotConnector.Application.DataAccess.Services
         public HubspotDealService(
             IOptions<HsAppSettings> appSettings,
             ICBSClient db,
+            ILogger<IHubspotDealService> logger,
             IHubspotOwnerRepository hubspotOwnerRepository,
             IHubspotContactRepository hubspotContactRepository)
         {
             _db = db;
+            _logger = logger;
             _appSettings = appSettings.Value;
             _hubspotOwnerRepository = hubspotOwnerRepository;
             _hubspotContactRepository = hubspotContactRepository;
@@ -74,6 +78,8 @@ namespace HubspotConnector.Application.DataAccess.Services
 
             var response = await _hubSpotDealClient.CreateAsync<DealHubSpotEntity>(dealDto);
             var hsId = response.Id ?? 0;
+
+            _logger.LogInformation($"{GetType().Name} CREATED HUBSPOT DEAL {hsId} owner:{ownerEmail} customer:{request.CustomerEmail} {dealDto.Name} deal value: {dealDto.Amount}");
 
             var deal = await HsDeal.Ensure<HsDeal>(hsId, _db);
             deal.ProjectId = request.Project.Id;
