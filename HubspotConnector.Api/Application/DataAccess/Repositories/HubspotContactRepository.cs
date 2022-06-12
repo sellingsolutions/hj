@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using HubspotConnector.CrossCuttingConcerns;
 using iSpectAPI.Core.Application.DataAccess.Clients.CouchbaseClients;
 using iSpectAPI.Core.Database.ActorModel.Actors;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Skarp.HubSpotClient;
 using Skarp.HubSpotClient.Associations;
 using Skarp.HubSpotClient.Company;
 using Skarp.HubSpotClient.Company.Dto;
@@ -20,6 +22,7 @@ namespace HubspotConnector.Application.DataAccess.Repositories
     public class HubspotContactRepository : IHubspotContactRepository
     {
         private readonly ICBSClient _db;
+        private readonly ILogger<IHubspotContactRepository> _logger;
         private readonly HsAppSettings _appSettings;
         private readonly IHubSpotContactClient _contactClient;
         private readonly IHubSpotAssociationsClient _associationsClient;
@@ -27,9 +30,11 @@ namespace HubspotConnector.Application.DataAccess.Repositories
 
         public HubspotContactRepository(
             IOptions<HsAppSettings> appSettings,
-            ICBSClient db)
+            ICBSClient db,
+            ILogger<IHubspotContactRepository> logger)
         {
             _db = db;
+            _logger = logger;
             _appSettings = appSettings.Value;
             _contactClient = new HubSpotContactClient(_appSettings.ApiKey);
             _associationsClient = new HubSpotAssociationsClient(_appSettings.ApiKey);
@@ -40,11 +45,18 @@ namespace HubspotConnector.Application.DataAccess.Repositories
         {
             if (email.IsNullOrEmpty())
                 return null;
-            
-            return await _contactClient.CreateAsync<ContactHubSpotEntity>(new ContactHubSpotEntity
+            try
             {
-                Email = email
-            });
+                return await _contactClient.CreateAsync<ContactHubSpotEntity>(new ContactHubSpotEntity
+                {
+                    Email = email
+                });
+            }
+            catch (HubSpotException e)
+            {
+                _logger.LogError($"{GetType().Name} COULD NOT CREATE CONTACT FOR {email} {e}");
+                return null;
+            }
         }
         public async Task<ContactHubSpotEntity> GetContactByEmail(string email)
         {

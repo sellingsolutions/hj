@@ -96,9 +96,9 @@ namespace HubspotConnector.Application.DataAccess.Queues
                         _logger.LogInformation($"{GetType().Name} - LOCK RELEASED {item.Id} - Finished processing {item.Id} {item.SourceDocumentId}");
 
                     }
-                    catch (TemporaryLockFailureException)
+                    catch (Exception e)
                     {
-                        _logger.LogError($"{GetType().Name} ABORTING - {item.Id} IS LOCKED! ");
+                        _logger.LogError($"{GetType().Name} ABORTING - {item.Id} IS LOCKED! {e}");
                     }
                 }
                 catch (Exception e)

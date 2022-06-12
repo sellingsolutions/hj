@@ -45,8 +45,7 @@ namespace HubspotConnector.Application.DataAccess.Handlers
 
             var sales = await _db.Get<IsSalesGroup>(salesGroupId);
             var salesReps = await sales.GetMembers(_db);
-            var defaultRep = salesReps.FirstOrDefault();
-            var defaultRepPerson = await _db.Get<IsPerson>(defaultRep?.SubjectId);
+            var defaultRepPerson = salesReps.FirstOrDefault();
 
             if (@event is HsCreateDealCommand createDealCommand)
             {

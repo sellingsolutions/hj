@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.101
+          dotnet-version: 6.0.101
 
       - name: Bump Version
         run: |
@@ -53,7 +53,7 @@ jobs:
         run: echo solarwind11 | ssh -tt zno@${{ secrets.ISPECT_APP_SERVER_STAGE }} 'rm /var/www/hubspot-connector-stage/nuget-packages/*.nupkg'
 
       - name: Deploy Application Binary
-        run: rsync -avzh --delete -e ssh /home/runner/work/hubspot-connector/hubspot-connector/HubspotConnector.Api/bin/Release/net5*/publish zno@${{ secrets.ISPECT_APP_SERVER_STAGE }}:/var/www/hubspot-connector-stage/
+        run: rsync -avzh --delete -e ssh /home/runner/work/hubspot-connector/hubspot-connector/HubspotConnector.Api/bin/Release/net6*/publish zno@${{ secrets.ISPECT_APP_SERVER_STAGE }}:/var/www/hubspot-connector-stage/
 
       - name: List Nupkegs
         run: ls -halt /home/runner/work/hubspot-connector/hubspot-connector/*/bin/Release

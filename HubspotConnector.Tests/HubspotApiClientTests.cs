@@ -71,7 +71,7 @@ namespace HubspotConnector.Tests
             var client = new HubSpotOwnerClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
             var ownerList = await client.ListAsync<OwnerHubSpotEntity>(new OwnerListRequestOptions
             {
-                Email = "yones@besiktningsman.se"
+                Email = "joakim.carpfelt@besiktningsman.se"
             });
             
             Assert.IsNotNull(ownerList);
