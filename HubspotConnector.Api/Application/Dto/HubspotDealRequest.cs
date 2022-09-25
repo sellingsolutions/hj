@@ -12,6 +12,8 @@ namespace HubspotConnector.Application.Dto
         public IsActor Customer { get; set; }
         public string CustomerEmail { get; set; }
         public Project Project { get; set; }
+        public Inspection Inspection { get; set; }
+        public string Url => $"https://app.ispect.se/organization/{Project.ClientId}/projects/{Project.Id}/inspections/{Inspection.Id}/verdicts";
         public DateTime CloseDate { get; set; }
         public decimal DealValue { get; set; }
         

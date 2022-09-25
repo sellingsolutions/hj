@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using HubspotConnector.Application.DataAccess.Repositories;
 using HubspotConnector.Application.Dto;
@@ -43,6 +44,14 @@ namespace HubspotConnector.Application.DataAccess.Services
 
         public async Task<HsDeal> CreateDeal(HubspotDealRequest request)
         {
+            var name = $"#{request.Project.Number} - {request.Project.Name} - {request.Name}";
+            var existingDeal = await GetDeal(request.Project.Id, name);
+            if (existingDeal != null)
+            {
+                _logger.LogInformation($"{GetType().Name} ABORTING! DEAL ALREADY EXISTS {name} {existingDeal.Id} {existingDeal.HsId}");
+                return null;
+            }
+            
             var ownerEmail = await request.DealOwner.GetLatestEmail(_db);
             var hsOwner = await _hubspotOwnerRepository.GetOwnerByEmail(ownerEmail);
 
@@ -60,9 +69,10 @@ namespace HubspotConnector.Application.DataAccess.Services
 
             var dealDto = new HubspotDealDto
             {
+                Url = request.Url,
                 OwnerId = hsOwner.Id,
                 DealType = "existingbusiness",
-                Name = $"#{request.Project.ReferenceId ?? ""} - {request.Project.Name} - {request.Name}",
+                Name = $"[ISPECT] {name}",
                 Amount = request.DealValue,
                 Pipeline = _appSettings.DefaultPipeline,
                 Stage = _appSettings.DefaultDealStage,
@@ -79,9 +89,10 @@ namespace HubspotConnector.Application.DataAccess.Services
             var response = await _hubSpotDealClient.CreateAsync<DealHubSpotEntity>(dealDto);
             var hsId = response.Id ?? 0;
 
-            _logger.LogInformation($"{GetType().Name} CREATED HUBSPOT DEAL {hsId} owner:{ownerEmail} customer:{request.CustomerEmail} {dealDto.Name} deal value: {dealDto.Amount}");
+            _logger.LogInformation($"{GetType().Name} CREATED HUBSPOT DEAL {hsId} owner:{ownerEmail} customer:{request.CustomerEmail} {name} deal value: {dealDto.Amount} {request.Url}");
 
             var deal = await HsDeal.Ensure<HsDeal>(hsId, _db);
+            deal.Name = name;
             deal.ProjectId = request.Project.Id;
             deal.OwnerId = hsOwner.Id;
             deal.PartyId = request.CustomerParty.Id;
@@ -96,6 +107,18 @@ namespace HubspotConnector.Application.DataAccess.Services
             dealDto.CopyPropsTo(deal);
 
             return await _db.Update(deal);
+        }
+
+        public async Task<HsDeal> GetDeal(string projectId, string name)
+        {
+            var statement = "SELECT meta().id " +
+                            "FROM ispect " +
+                            $"WHERE type = '{typeof(HsDeal).GetDocumentType()}' " +
+                            $"AND `projectID` = '{projectId}' " +
+                            $"AND `name` = '{name}' ";
+            
+            var result = await _db.ExecuteStatement<HsDeal>(statement);
+            return result.FirstOrDefault();
         }
     }
 }

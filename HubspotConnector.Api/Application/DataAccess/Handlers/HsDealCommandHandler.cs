@@ -24,7 +24,7 @@ namespace HubspotConnector.Application.DataAccess.Handlers
         private readonly HsAppSettings _appSettings;
         private readonly IHubspotDealService _hubspotDealService;
         private readonly IGroupActorRepository _groupActorRepository;
-
+        private readonly IActorRepository _actorRepository;
         public HsDealCommandHandler(
             ICBSClient db, 
             IOptions<HsAppSettings> appSettings,
@@ -41,7 +41,10 @@ namespace HubspotConnector.Application.DataAccess.Handlers
         {
             var notification = await _db.Get<IsNotification>(@event.ParentId);
             var project = await _db.Get<Project>(@event.SourceDocumentId);
-            var salesGroupId = IsSalesGroup.CreateDocumentId(project.ClientId, IsDefaultGroupEnum.Sales.ToString());
+
+            var client = await _db.Get<Client>(project.ClientId);
+            var company = await _db.Get<IsCompany>(client.SubjectId);
+            var salesGroupId = IsSalesGroup.CreateDocumentId(company.Id, IsDefaultGroupEnum.Sales.ToString());
 
             var sales = await _db.Get<IsSalesGroup>(salesGroupId);
             var salesReps = await sales.GetMembers(_db);
@@ -70,7 +73,7 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                     var customer = await _db.Get<IsActor>(customerParty.SubjectId);
 
                     var propertyEntities = await _db.Get<PropertyEntity>(warrantyReminder.PropertyEntityIds);
-                    var noOfPropertyEntities =propertyEntities?.Count() ?? 0;
+                    var noOfPropertyEntities = propertyEntities?.Count() ?? 0;
                     var noOfApartmentBuildings = 0;
                     var noOfApartments = 0;
                     if (propertyEntities.IsNotNullOrEmpty())
@@ -90,6 +93,7 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                         CustomerParty = customerParty,
                         Customer = customer,
                         Project = project,
+                        Inspection = inspection,
                         CloseDate = followUpDeadline,
                         CustomerEmail = defaultPartyMemberEmail,
                         DealValue = dealValue,
