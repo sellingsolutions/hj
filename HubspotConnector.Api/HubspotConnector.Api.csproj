@@ -4,14 +4,14 @@
         <TargetFramework>net6.0</TargetFramework>
         <RootNamespace>HubspotConnector</RootNamespace>
         <IsPackable>true</IsPackable>
-        <PackageVersion>0.1.5</PackageVersion>
+        <PackageVersion>0.1.6</PackageVersion>
         <Title>hubspot-connector</Title>
         <Authors>Alexander Selling</Authors>
         <RepositoryUrl>https://github.com/sellingsolutions/hubspot-connector</RepositoryUrl>
         <Company>SellingSolutions Scandinavia AB</Company>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <AssemblyVersion>0.1.5</AssemblyVersion>
-        <FileVersion>0.1.5</FileVersion>
+        <AssemblyVersion>0.1.6</AssemblyVersion>
+        <FileVersion>0.1.6</FileVersion>
         <LangVersion>default</LangVersion>
     </PropertyGroup>
 
