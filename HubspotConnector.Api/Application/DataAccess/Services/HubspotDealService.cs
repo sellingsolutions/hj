@@ -44,7 +44,7 @@ namespace HubspotConnector.Application.DataAccess.Services
         
         public async Task<HsDeal> CreateDeal(HubspotDealRequest request)
         {
-            var name = $"#{request.Project.Number} - {request.Project.Name} - {request.Name}";
+            var name = $"#{request.Project.ReferenceId} - {request.Project.Name} - {request.Name}";
             var existingDeal = await GetDeal(request.Project.Id, name);
             if (existingDeal != null)
             {
