@@ -48,6 +48,7 @@ namespace HubspotConnector
             services.AddSingleton<IHubspotDealService, HubspotDealService>();
             
             // Repositories
+            services.AddSingleton<IPartyRepository, PartyRepository>();
             services.AddSingleton<IGroupActorRepository, GroupActorRepository>();
             services.AddSingleton<IHubspotContactRepository, HubspotContactRepository>();
             services.AddSingleton<IHubspotOwnerRepository, HubspotOwnerRepository>();
