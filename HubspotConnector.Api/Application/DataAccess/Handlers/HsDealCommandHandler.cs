@@ -16,6 +16,7 @@ using iSpectAPI.Core.Database.Legacy;
 using iSpectAPI.Core.Database.QueueItems.Notifications;
 using iSpectAPI.Core.Database.QueueItems.Notifications.WarrantyReminders;
 using Microsoft.Extensions.Options;
+using Skarp.HubSpotClient;
 using WeihanLi.Common.Event;
 
 namespace HubspotConnector.Application.DataAccess.Handlers
@@ -63,14 +64,28 @@ namespace HubspotConnector.Application.DataAccess.Handlers
 
             if (@event is HsCreateDealCommand createDealCommand)
             {
-                if (order != null)
+                try
                 {
-                    await HandleOrderDeal(order, project);
+                    if (order != null)
+                    {
+                        await HandleOrderDeal(order, project);
+                    }
+                    else if (notification is IsWarrantyReminderNotification warrantyReminder)
+                    {
+                        await HandleWarrantyReminderDeal(warrantyReminder, project, defaultRepPerson);
+                    }
                 }
-                else if (notification is IsWarrantyReminderNotification warrantyReminder)
+                catch (HubSpotException hubSpotException)
                 {
-                    await HandleWarrantyReminderDeal(warrantyReminder, project, defaultRepPerson);
+                    // Mark as processed if invalid domain, no use in retrying
+                    if (hubSpotException.RawJsonResponse.Contains("INVALID_DOMAIN"))
+                    {
+                        return;
+                    }
+
+                    throw new HubSpotException(hubSpotException.Message, hubSpotException.InnerException);
                 }
+                
             }
         }
 
