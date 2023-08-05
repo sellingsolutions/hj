@@ -7,7 +7,7 @@ namespace HubspotConnector.Application.DataAccess.Repositories
 {
     public interface IHubspotContactRepository
     {
-        Task<ContactHubSpotEntity> CreateContact(string email);
+        Task<ContactHubSpotEntity> CreateContact(IsActor actor);
         Task<ContactHubSpotEntity> GetContactByEmail(string email);
 
         Task<CompanyHubSpotEntity> CreateCompany(string name);

@@ -58,7 +58,7 @@ namespace HubspotConnector.Application.DataAccess.Services
             var customerContact = await _hubspotContactRepository.GetContactByEmail(request.CustomerEmail);
             if (customerContact == null && request.CustomerEmail.IsNotNullOrEmpty())
             {
-                customerContact = await _hubspotContactRepository.CreateContact(request.CustomerEmail);
+                customerContact = await _hubspotContactRepository.CreateContact(request.Customer);
             }
 
             var contactCompany = await _hubspotContactRepository.GetContactCompany(customerContact?.Id ?? 0);

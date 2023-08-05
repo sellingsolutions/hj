@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using HubspotConnector.CrossCuttingConcerns;
 using iSpectAPI.Core.Application.DataAccess.Clients.CouchbaseClients;
 using iSpectAPI.Core.Database.ActorModel.Actors;
+using iSpectAPI.Core.Database.ActorModel.Records;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Skarp.HubSpotClient;
@@ -41,15 +42,61 @@ namespace HubspotConnector.Application.DataAccess.Repositories
             _companyClient = new HubSpotCompanyClient(_appSettings.ApiKey);
         }
 
-        public async Task<ContactHubSpotEntity> CreateContact(string email)
+        public async Task<ContactHubSpotEntity> CreateContact(IsActor actor)
         {
+            var email = await actor.GetLatestEmail(nameof(IsActor.EmailAddressIds), _db);
+            IsCompany company = null;
+            IsAddress address = null;
+            var companyName = "";
+            var website = "";
+            var firstName = "";
+            var lastName = "";
+            var phone = "";
+            var addressLine1 = "";
+            var zipCode = "";
+            var city = "";
+            if (actor is IsPerson person)
+            {
+                address = await person.GetLatestAddress(_db);
+                company = await person.GetLatestCompany(_db);
+           
+                firstName = person.FirstName;
+                lastName = person.LastName;
+                phone = (await person.GetLatestPhoneNo(_db))?.Number;
+            }
+
+            if (company != null)
+            {
+                companyName = company.Name;
+                address = await company.GetLatestAddress(_db);
+                website = (await company.GetLatestWebAddress(_db))?.Address;
+            }
+
+            if (address != null)
+            {
+                addressLine1 = address.AddressLine1;
+                zipCode = address.ZipCode;
+                city = address.City;
+            }
+
             if (email.IsNullOrEmpty())
+            {
+                _logger.LogError($"{GetType().Name} COULD NOT CREATE CONTACT FOR actor. {actor.Id} emailAddressIds: {actor.EmailAddressIds} NO EMAIL FOUND");                return null;
                 return null;
+            }
             try
             {
                 return await _contactClient.CreateAsync<ContactHubSpotEntity>(new ContactHubSpotEntity
                 {
-                    Email = email
+                    Email = email,
+                    FirstName = firstName,
+                    Lastname = lastName,
+                    Company = companyName,
+                    Address = addressLine1,
+                    City = city,
+                    ZipCode = zipCode,
+                    Website = website,
+                    Phone = phone,
                 });
             }
             catch (HubSpotException e)
