@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Skarp.HubSpotClient.Associations;
 using Skarp.HubSpotClient.Associations.Dto;
+using Skarp.HubSpotClient.Common.Dto.Properties;
 using Skarp.HubSpotClient.Company;
 using Skarp.HubSpotClient.Company.Dto;
 using Skarp.HubSpotClient.Contact;
@@ -29,7 +30,7 @@ namespace HubspotConnector.Tests
         [Test]
         public async Task GetContact()
         {
-            var client = new HubSpotContactClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
+            var client = new HubSpotContactClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
 
             var contact = await client.GetByEmailAsync<ContactHubSpotEntity>("lovisa.hallman@spg.se", new ContactGetRequestOptions
             {
@@ -42,7 +43,7 @@ namespace HubspotConnector.Tests
         [Test]
         public async Task GetAssociations()
         {
-            var contactClient = new HubSpotContactClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
+            var contactClient = new HubSpotContactClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
 
             var contact = await contactClient.GetByEmailAsync<ContactHubSpotEntity>("lovisa.hallman@spg.se", new ContactGetRequestOptions
             {
@@ -50,7 +51,7 @@ namespace HubspotConnector.Tests
                 IncludeHistory = true
             });
             
-            var client = new HubSpotAssociationsClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
+            var client = new HubSpotAssociationsClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
             var associations = await client.GetListByIdAsync(
                 contact.Id ?? 0,
                 HubSpotAssociationDefinitions.ContactToCompany,
@@ -59,7 +60,7 @@ namespace HubspotConnector.Tests
                     NumberOfAssociationsToReturn = 1
                 });
             
-            var companyClient = new HubSpotCompanyClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
+            var companyClient = new HubSpotCompanyClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
             var company = await companyClient.GetByIdAsync<CompanyHubSpotEntity>(associations.Results.FirstOrDefault());
             
             Assert.IsNotNull(company);
@@ -68,7 +69,7 @@ namespace HubspotConnector.Tests
         [Test]
         public async Task GetOwner()
         {
-            var client = new HubSpotOwnerClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
+            var client = new HubSpotOwnerClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
             var ownerList = await client.ListAsync<OwnerHubSpotEntity>(new OwnerListRequestOptions
             {
                 Email = "joakim.carpfelt@besiktningsman.se"
@@ -80,7 +81,7 @@ namespace HubspotConnector.Tests
         [Test]
         public async Task GetCompany()
         {
-            var client = new HubSpotCompanyClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
+            var client = new HubSpotCompanyClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
             var company = await client.GetByIdAsync<CompanyHubSpotEntity>(3285005450);
             
             var duplicate = await client.CreateAsync<CompanyHubSpotEntity>(company);
@@ -91,9 +92,13 @@ namespace HubspotConnector.Tests
         [Test]
         public async Task GetDeal()
         {
-            var client = new HubSpotDealClient("ec4e818f-8961-4d91-96df-ac72de5a1cdc");
-            var deal = await client.GetByIdAsync<DealHubSpotEntity>(5364203815);
+            var client = new HubSpotDealClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
+            var properties = await client.GetPropertiesAsync<PropertyListHubSpotEntity<DealPropertyHubSpotEntity>>();
+            var existingBusiness = properties.FirstOrDefault(o => o.Name.ToLower().Contains("existing"));
+            
+            var deal = await client.GetByIdAsync<DealHubSpotEntity>(14003985166);
             Assert.IsNotNull(deal);
         }
+
     }
 }

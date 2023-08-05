@@ -7,6 +7,12 @@ namespace HubspotConnector.Application.Dto
     public class HubspotDealRequest
     {
         public string Name { get; set; }
+        
+        public string DealType { get; set; }
+        
+        public string Pipeline { get; set; }
+        public string DealStage { get; set; }
+        
         public IsActor DealOwner { get; set; } 
         public Party CustomerParty { get; set; }
         public IsActor Customer { get; set; }

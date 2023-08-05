@@ -41,7 +41,7 @@ namespace HubspotConnector.Application.DataAccess.Services
             
             _hubSpotDealClient = new HubSpotDealClient(_appSettings.ApiKey);
         }
-
+        
         public async Task<HsDeal> CreateDeal(HubspotDealRequest request)
         {
             var name = $"#{request.Project.Number} - {request.Project.Name} - {request.Name}";
@@ -52,7 +52,7 @@ namespace HubspotConnector.Application.DataAccess.Services
                 return null;
             }
             
-            var ownerEmail = await request.DealOwner.GetLatestEmail(_db);
+            var ownerEmail = await request.DealOwner.GetLatestEmail(nameof(IsActor.EmailAddressIds), _db);
             var hsOwner = await _hubspotOwnerRepository.GetOwnerByEmail(ownerEmail);
 
             var customerContact = await _hubspotContactRepository.GetContactByEmail(request.CustomerEmail);
@@ -71,7 +71,7 @@ namespace HubspotConnector.Application.DataAccess.Services
             {
                 Url = request.Url,
                 OwnerId = hsOwner.Id,
-                DealType = "existingbusiness",
+                DealType = request.DealType,
                 Name = $"[ISPECT] {name}",
                 Amount = request.DealValue,
                 Pipeline = _appSettings.DefaultPipeline,

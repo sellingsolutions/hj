@@ -6,5 +6,6 @@ namespace HubspotConnector.CrossCuttingConcerns
         public string ApiKey { get; set; }
         public string DefaultPipeline { get; set; }
         public string DefaultDealStage { get; set; }
+        public string BookingsDealStage { get; set; }
     }
 }
