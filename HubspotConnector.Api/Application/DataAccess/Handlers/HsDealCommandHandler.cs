@@ -109,7 +109,7 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                 Inspection = inspections.FirstOrDefault(),
                 CloseDate = order.CreatedAt,
                 CustomerEmail = customerPartyEmail,
-                DealValue = order.GetPriceExclVat(),
+                DealValue = order.Price
             };
 
             await _hubspotDealService.CreateDeal(request);
