@@ -49,7 +49,8 @@ namespace HubspotConnector.Application.DataAccess.Queues
                             "FROM ispect " +
                             $"WHERE typeSpecifier LIKE '{typeof(HsCommand).ComputeTypeSpecifier()}%' " +
                             $"AND environment = '{env}' " +
-                            "AND (processed IS NOT VALUED OR processed = false) ";
+                            "AND (processed IS NOT VALUED OR processed = false) " +
+                            "ORDER BY createdAt DESC";
             
             var unprocessed = await _cbsClient.ExecuteStatement<HsCommand>(statement);
             _logger.LogInformation($"{GetType().Name} - There are currently {unprocessed.Count} UNPROCESSED {nameof(HsCommand)}");

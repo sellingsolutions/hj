@@ -136,6 +136,31 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                 defaultPartyMemberEmail = await defaultPartyMember.GetLatestEmail(nameof(IsActor.EmailAddressIds), _db);
             
             var customer = await _db.Get<IsActor>(customerParty.SubjectId);
+            if (customer == null)
+            {
+                var userContext = await inspection.GetUserContext(_db);
+                var legacyContact = await _db.Get<Contact>(customerParty.CompanyContactId ?? customerParty.ContactId);
+                if (customerParty.CompanyContactId.IsNotNullOrEmpty())
+                {
+                    customer = await IsCompany.CreateFromContact(legacyContact, userContext, _db);
+                }
+                if (customerParty.ContactId.IsNotNullOrEmpty())
+                {
+                    customer = await _db.Insert(typeof(IsPerson).CreateDocumentId(), new IsPerson
+                    {
+                        Channels = userContext != null ? new[] { userContext.ClientChannel } : Array.Empty<string>(),
+                        FirstName = legacyContact.FirstName,
+                        LastName = legacyContact.LastName,
+                        TaxId = legacyContact.TaxId,
+                        BillingAddressIds = legacyContact.BillingAddressIds,
+                        AddressIds = legacyContact.AddressIds,
+                        PhoneNumberIds = legacyContact.PhoneNumberIds,
+                        EmailAddressIds = legacyContact.EmailAddressIds,
+                        WebAddressIds = legacyContact.WebAddressIds,
+                        ContactId = legacyContact.Id
+                    });
+                }
+            }
 
             var propertyEntities = await _db.Get<PropertyEntity>(warrantyReminder.PropertyEntityIds);
             var noOfPropertyEntities = propertyEntities?.Count() ?? 0;
