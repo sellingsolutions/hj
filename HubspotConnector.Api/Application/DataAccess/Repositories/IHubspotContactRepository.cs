@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using iSpectAPI.Core.Database.ActorModel.Actors;
 using Skarp.HubSpotClient.Company.Dto;
@@ -7,6 +8,7 @@ namespace HubspotConnector.Application.DataAccess.Repositories
 {
     public interface IHubspotContactRepository
     {
+        Task<IEnumerable<ContactHubSpotEntity>> GetAllContacts();
         Task<ContactHubSpotEntity> CreateContact(IsActor actor);
         Task<ContactHubSpotEntity> GetContactByEmail(string email);
 

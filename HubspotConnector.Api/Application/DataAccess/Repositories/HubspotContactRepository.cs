@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HubspotConnector.CrossCuttingConcerns;
@@ -42,10 +43,36 @@ namespace HubspotConnector.Application.DataAccess.Repositories
             _companyClient = new HubSpotCompanyClient(_appSettings.ApiKey);
         }
 
+        public async Task<IEnumerable<ContactHubSpotEntity>> GetAllContacts()
+        {
+            var contacts = new List<ContactHubSpotEntity>();
+            var result = new ContactListHubSpotEntity<ContactHubSpotEntity>
+            {
+                MoreResultsAvailable = true
+            };
+            
+            while (result.MoreResultsAvailable)
+            {
+                var continuationOffset = result.ContinuationOffset;
+                result = await _contactClient.ListAsync<ContactListHubSpotEntity<ContactHubSpotEntity>>(new ContactListRequestOptions
+                {
+                    ContactOffset = continuationOffset,
+                    NumberOfContactsToReturn = 1000,
+                    PropertiesToInclude = new List<string>
+                    {
+                        "email", "firstName", "lastname", "company", "website", "phone", "address", "city", "state", "zip"
+                    }
+                });
+               contacts.AddRange(result.Contacts);
+            }
+
+            return contacts;
+        }
+
         public async Task<ContactHubSpotEntity> CreateContact(IsActor actor)
         {
             var email = await actor.GetLatestEmail(nameof(IsActor.EmailAddressIds), _db);
-            IsCompany company = null;
+            IsCompany company = actor as IsCompany;
             IsAddress address = null;
             var companyName = "";
             var website = "";
@@ -63,6 +90,7 @@ namespace HubspotConnector.Application.DataAccess.Repositories
                 firstName = person.FirstName;
                 lastName = person.LastName;
                 phone = (await person.GetLatestPhoneNo(_db))?.Number;
+                website = (await person.GetLatestWebAddress(_db))?.Address;
             }
 
             if (company != null)

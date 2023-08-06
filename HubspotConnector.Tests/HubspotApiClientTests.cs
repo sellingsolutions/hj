@@ -14,6 +14,7 @@ using Skarp.HubSpotClient.Contact.Dto;
 using Skarp.HubSpotClient.Core;
 using Skarp.HubSpotClient.Deal;
 using Skarp.HubSpotClient.Deal.Dto;
+using Skarp.HubSpotClient.ListOfContacts;
 using Skarp.HubSpotClient.Owner;
 using Skarp.HubSpotClient.Owner.Dto;
 
@@ -93,10 +94,29 @@ namespace HubspotConnector.Tests
         public async Task GetDeal()
         {
             var client = new HubSpotDealClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
-            var properties = await client.GetPropertiesAsync<PropertyListHubSpotEntity<DealPropertyHubSpotEntity>>();
-            var existingBusiness = properties.FirstOrDefault(o => o.Name.ToLower().Contains("existing"));
             
             var deal = await client.GetByIdAsync<DealHubSpotEntity>(14003985166);
+            var contactsClient = new HubSpotContactClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
+            var result = new ContactListHubSpotEntity<ContactHubSpotEntity>
+            {
+                MoreResultsAvailable = true
+            };
+            
+            while (result.MoreResultsAvailable)
+            {
+                var continuationOffset = result.ContinuationOffset;
+                result = await contactsClient.ListAsync<ContactListHubSpotEntity<ContactHubSpotEntity>>(new ContactListRequestOptions
+                {
+                    ContactOffset = continuationOffset,
+                    NumberOfContactsToReturn = 10,
+                    PropertiesToInclude = new List<string>
+                    {
+                        "email", "firstName", "lastname", "company", "website", "phone", "address", "city", "state", "zip"
+                    }
+                });
+                Console.WriteLine(result);
+            }
+            
             Assert.IsNotNull(deal);
         }
 
