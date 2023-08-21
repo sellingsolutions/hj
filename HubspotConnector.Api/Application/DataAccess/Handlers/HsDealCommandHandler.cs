@@ -142,24 +142,11 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                 var legacyContact = await _db.Get<Contact>(customerParty.CompanyContactId ?? customerParty.ContactId);
                 if (customerParty.CompanyContactId.IsNotNullOrEmpty())
                 {
-                    customer = await IsCompany.CreateFromContact(legacyContact, userContext, _db);
+                    customer = await IsCompany.EnsureFromContact(legacyContact, userContext, _db);
                 }
                 if (customerParty.ContactId.IsNotNullOrEmpty())
                 {
-                    var personId = $"{typeof(IsPerson).GetDocumentType()}_{legacyContact.Id}";
-                    customer = await _db.Insert(personId, new IsPerson
-                    {
-                        Channels = userContext != null ? new[] { userContext.ClientChannel } : Array.Empty<string>(),
-                        FirstName = legacyContact.FirstName,
-                        LastName = legacyContact.LastName,
-                        TaxId = legacyContact.TaxId,
-                        BillingAddressIds = legacyContact.BillingAddressIds,
-                        AddressIds = legacyContact.AddressIds,
-                        PhoneNumberIds = legacyContact.PhoneNumberIds,
-                        EmailAddressIds = legacyContact.EmailAddressIds,
-                        WebAddressIds = legacyContact.WebAddressIds,
-                        ContactId = legacyContact.Id
-                    }, userContext);
+                    customer = await IsPerson.EnsureFromContact(legacyContact, _db);
                 }
 
                 customerParty.SubjectId = customer?.Id;
