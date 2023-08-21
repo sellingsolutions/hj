@@ -95,6 +95,11 @@ namespace HubspotConnector.Tests
         {
             var client = new HubSpotDealClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
             
+            client.ListAsync<DealListHubSpotEntity<DealHubSpotEntity>>(new DealListRequestOptions
+            {
+                
+            });
+            
             var deal = await client.GetByIdAsync<DealHubSpotEntity>(14003985166);
             var contactsClient = new HubSpotContactClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
             var result = new ContactListHubSpotEntity<ContactHubSpotEntity>
@@ -118,6 +123,34 @@ namespace HubspotConnector.Tests
             }
             
             Assert.IsNotNull(deal);
+        }
+
+        [Test]
+        public async Task GetAllContacts()
+        {
+            var client = new HubSpotContactClient("pat-na1-7514089e-8af4-46fd-a7fe-2ee37751c10d");
+            var contacts = new List<ContactHubSpotEntity>();
+            var result = new ContactListHubSpotEntity<ContactHubSpotEntity>
+            {
+                MoreResultsAvailable = true
+            };
+            
+            while (result.MoreResultsAvailable)
+            {
+                var continuationOffset = result.ContinuationOffset;
+                result = await client.ListAsync<ContactListHubSpotEntity<ContactHubSpotEntity>>(new ContactListRequestOptions
+                {
+                    ContactOffset = continuationOffset,
+                    NumberOfContactsToReturn = 100,
+                    PropertiesToInclude = new List<string>
+                    {
+                        "email", "firstName", "lastname", "company", "website", "phone", "address", "city", "state", "zip"
+                    }
+                });
+                contacts.AddRange(result.Contacts);
+            }
+
+            Assert.IsNotNull(contacts);
         }
 
     }

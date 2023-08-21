@@ -146,7 +146,8 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                 }
                 if (customerParty.ContactId.IsNotNullOrEmpty())
                 {
-                    customer = await _db.Insert(typeof(IsPerson).CreateDocumentId(), new IsPerson
+                    var personId = $"{typeof(IsPerson).GetDocumentType()}_{legacyContact.Id}";
+                    customer = await _db.Insert(personId, new IsPerson
                     {
                         Channels = userContext != null ? new[] { userContext.ClientChannel } : Array.Empty<string>(),
                         FirstName = legacyContact.FirstName,
@@ -158,8 +159,11 @@ namespace HubspotConnector.Application.DataAccess.Handlers
                         EmailAddressIds = legacyContact.EmailAddressIds,
                         WebAddressIds = legacyContact.WebAddressIds,
                         ContactId = legacyContact.Id
-                    });
+                    }, userContext);
                 }
+
+                customerParty.SubjectId = customer?.Id;
+                await _db.Update(customerParty, userContext);
             }
 
             var propertyEntities = await _db.Get<PropertyEntity>(warrantyReminder.PropertyEntityIds);
